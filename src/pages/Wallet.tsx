@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useFetch } from "../utils/client";
+import { useNavigate } from "react-router-dom";
 
 // ตัวอย่าง interface ของ wallet
 interface Wallet {
@@ -31,6 +32,8 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(10);
 
+  const navigate = useNavigate();
+  
   const fetchWallets = async () => {
     const token = localStorage.getItem("token");
     if (token == null) return;
@@ -57,7 +60,6 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
 
     if (cart != null) {
       const cartArr = JSON.parse(cart);
-      console.log("cartArr", cartArr);
       setCartCount(cartArr.length);
     }
     setWallets([
@@ -100,7 +102,9 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
           mb={3}
         >
           <Typography variant="h4">Wallet Management</Typography>
-          <Button variant="contained" startIcon={<Add />} color="primary">
+          <Button variant="contained" startIcon={<Add />} color="primary" onClick={()=>{
+            navigate("/add-wallet")
+          }}>
             Add Wallet
           </Button>
         </Box>
@@ -118,12 +122,14 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
                   <Box display="flex" justifyContent="flex-end" mt={2}>
                     <IconButton
                       color="primary"
+                      disabled
                       onClick={() => handleEdit(wallet)}
                     >
                       <Edit />
                     </IconButton>
                     <IconButton
                       color="error"
+                      disabled
                       onClick={() => handleDelete(wallet.id)}
                     >
                       <Delete />

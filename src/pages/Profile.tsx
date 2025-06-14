@@ -41,6 +41,7 @@ export interface UserProfile {
 
 const Profile = (props: { disableCustomTheme?: boolean }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [cartCount, setCartCount] = useState(0);
 
   const fetchUser = async () => {
     const token = localStorage.getItem("token");
@@ -61,6 +62,11 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
   };
 
   useEffect(() => {
+    const cart = localStorage.getItem("cart");
+    if (cart != null) {
+      const cartArr = JSON.parse(cart);
+      setCartCount(cartArr.length);
+    }
     const fetchData = async () => {
       await fetchUser();
     };
@@ -71,7 +77,7 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-      <Navbar cartCount={1} />
+      <Navbar cartCount={cartCount} />
       <Box sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom>
           Profile
@@ -98,13 +104,13 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
                   {user.fullname}
                 </Typography>
 
-                <Button
+                {/* <Button
                   variant="outlined"
                   sx={{ mt: 2 }}
                   onClick={() => alert("Edit profile")}
                 >
                   Edit Profile
-                </Button>
+                </Button> */}
               </Grid>
 
               <Grid size={{ xs: 12, md: 8 }}>
