@@ -1,10 +1,13 @@
 import "./App.css";
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ProtectedRoute from "./middleware/ProtectedRoute";
 import PublicRoute from "./middleware/PublicRoute";
+import Product from "./pages/Product";
+import Cart from "./pages/Cart";
+import BackofficeSignUp from "./pages/BackofficeSignUp";
+import AddProduct from "./pages/AddProduct";
 
 function App() {
   return (
@@ -14,6 +17,14 @@ function App() {
         element={
           <PublicRoute>
             <SignIn />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/backoffice"
+        element={
+          <PublicRoute>
+            <BackofficeSignUp />
           </PublicRoute>
         }
       />
@@ -37,7 +48,31 @@ function App() {
         path="/home"
         element={
           <ProtectedRoute>
-            <Home />
+            <Product />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/product"
+        element={
+          <ProtectedRoute>
+            <Product />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/add-product"
+        element={
+          <ProtectedRoute>
+            <AddProduct />
           </ProtectedRoute>
         }
       />

@@ -60,13 +60,13 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-export default function SignUp(props: { disableCustomTheme?: boolean }) {
+export default function BackofficeSignUp(props: { disableCustomTheme?: boolean }) {
   const [formData, setFormData] = React.useState({
     username: "",
     password: "",
     fullName: "",
     email: "",
-    roleInfoId: 2,
+    roleInfoId: 1,
   });
   const navigate = useNavigate();
 
@@ -114,9 +114,9 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
           <Typography
             component="h1"
             variant="h4"
-            sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
+            sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)", textAlign: 'center' }}
           >
-            Sign up
+            BackOffice <br /> Sign up
           </Typography>
           <Box
             component="form"

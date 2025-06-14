@@ -16,12 +16,20 @@ import { styled } from "@mui/material/styles";
 import ForgotPassword from "../components/ForgotPassword";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
-import {
-  GoogleIcon,
-  FacebookIcon,
-  SitemarkIcon,
-} from "../components/CustomIcons";
+import { SitemarkIcon } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
+import { useFetch } from "../utils/client";
+
+interface SignInDataResponse {
+  refresh_token: string;
+  token: string;
+}
+
+interface SignInResponse {
+  data: SignInDataResponse;
+  response_key: string;
+  response_message: string;
+}
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -72,7 +80,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   });
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
-  
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -90,28 +98,19 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const apiUrl = import.meta.env.VITE_API_URL;
-
     try {
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      event.preventDefault();
+      const response = await useFetch<SignInResponse>("auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Something went wrong");
+      if (response) {
+        console.log("Register success:", response);
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("refresh_token", response.data.refresh_token);
+        navigate("/home");
       }
-
-      console.log("Register success:", result);
-      localStorage.setItem("token", result.data.token);
-      localStorage.setItem("refresh_token", result.data.refresh_token);
-            navigate("/home");
     } catch (err) {
       console.error("Error:", err);
     }
