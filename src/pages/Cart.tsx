@@ -82,7 +82,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
         },
         body: {
           orders,
-          wallet_id: selectedWallet,
+          walletId: selectedWallet,
         },
       });
 

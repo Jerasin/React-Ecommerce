@@ -24,6 +24,7 @@ interface Wallet {
   token: string;
   user_id: number;
   uuid: string;
+  value: number
 }
 
 export default function WalletManager(props: { disableCustomTheme?: boolean }) {
@@ -62,22 +63,7 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
       const cartArr = JSON.parse(cart);
       setCartCount(cartArr.length);
     }
-    setWallets([
-      {
-        id: 1,
-        name: "Main Wallet",
-        token: "abcd1234",
-        user_id: 1,
-        uuid: "uuid-001",
-      },
-      {
-        id: 2,
-        name: "Crypto Wallet",
-        token: "xyz9876",
-        user_id: 1,
-        uuid: "uuid-002",
-      },
-    ]);
+
 
     fetchData();
   }, []);
@@ -119,6 +105,7 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
                     Token: {wallet.token}
                   </Typography>
                   <Typography variant="body2">UUID: {wallet.uuid}</Typography>
+                   <Typography variant="body2">Value: {wallet.value}</Typography>
                   <Box display="flex" justifyContent="flex-end" mt={2}>
                     <IconButton
                       color="primary"

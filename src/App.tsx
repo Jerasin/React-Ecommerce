@@ -12,6 +12,7 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import WalletManager from "./pages/Wallet";
 import AddWallet from "./pages/AddWallet";
+import OrderDetail from "./pages/OrderDetail";
 
 function App() {
   return (
@@ -109,6 +110,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AddWallet />
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path="/order-detail/:orderId"
+        element={
+          <ProtectedRoute>
+            <OrderDetail />
           </ProtectedRoute>
         }
       />

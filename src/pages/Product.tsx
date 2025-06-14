@@ -46,7 +46,7 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
-  
+
   const addCart = (product: Product) => {
     const cart = localStorage.getItem("cart");
     if (cart != null) {

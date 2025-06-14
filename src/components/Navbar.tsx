@@ -20,7 +20,9 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { useUserStore } from "../store/userStore";
+import { useUserStore, type UserInfoStore } from "../store/userStore";
+import { useEffect } from "react";
+import { useFetch } from "../utils/client";
 
 interface MenuAppBarOption {
   cartCount: number;
@@ -52,10 +54,44 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
     // },
   ];
   const user = useUserStore((state) => state.user);
-
+  const clearUser = useUserStore((state) => state.clearUser);
+  const setUser = useUserStore((state) => state.setUser);
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+
+  const getUserInfo = async (token: string) => {
+    try {
+      const response = await useFetch<any>(`users/info`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        method: "GET",
+      });
+
+      return response;
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (user == null) {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const userInfo = await getUserInfo(token);
+        if (userInfo?.data) {
+          console.log("Set userInfo");
+          setUser(userInfo.data);
+        }
+      }
+    };
+
+    fetchData();
+  }, []);
+  console.log("user", user);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -260,9 +296,7 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
                 >
                   WalletManager
                 </MenuItem>
-              ) : (
-                null
-              )}
+              ) : null}
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </div>

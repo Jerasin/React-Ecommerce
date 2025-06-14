@@ -13,6 +13,7 @@ import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
+import { useNavigate } from "react-router-dom";
 
 interface HistoryItem {
   id: number;
@@ -33,7 +34,8 @@ const History = (props: { disableCustomTheme?: boolean }) => {
   const [totalPage, setTotalPage] = useState(1);
   const [histories, setHistories] = useState<HistoryItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
-
+  const navigate = useNavigate();
+  
   const fetchHistories = async (page: number) => {
     try {
       const token = localStorage.getItem("token");
@@ -70,6 +72,7 @@ const History = (props: { disableCustomTheme?: boolean }) => {
 
   const handleDetail = (id: number) => {
     console.log("Go to detail of order id:", id);
+    navigate(`/order-detail/${id}`)
     // คุณสามารถ navigate ไปหน้ารายละเอียด เช่น navigate(`/history/${id}`)
   };
 

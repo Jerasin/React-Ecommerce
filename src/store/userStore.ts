@@ -11,7 +11,7 @@ interface UserRoleInfoStore {
   permissionInfos: UserRolePermissionInfoStore[];
 }
 
-interface UserInfoStore {
+export interface UserInfoStore {
   username: string;
   id: number;
   userId: number;
