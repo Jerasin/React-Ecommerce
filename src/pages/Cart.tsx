@@ -19,6 +19,7 @@ import AppTheme from "../shared-theme/AppTheme";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useFetch } from "../utils/client";
+import Navbar from "../components/Navbar";
 
 interface CartItem {
   id: number;
@@ -34,6 +35,8 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
   const [wallets, setWallets] = useState<{ id: number; name: string }[]>([]);
   const [selectedWallet, setSelectedWallet] = useState<number | "">("");
   const navigate = useNavigate();
+  const [walletError, setWalletError] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const fetchUserWallets = async () => {
     const token = localStorage.getItem("token");
@@ -57,12 +60,17 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
 
   const createOrder = async () => {
     try {
+      if (!selectedWallet) {
+        setWalletError(true);
+        return;
+      }
+
       const token = localStorage.getItem("token");
       if (token == null || selectedWallet == null) return;
       const orders = cartItems.map((i) => {
         return {
           amount: i.amount,
-          product_id: i.id,
+          productId: i.id,
         };
       });
 
@@ -78,8 +86,8 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
         },
       });
 
-      localStorage.removeItem("cart")
-      navigate('/')
+      localStorage.removeItem("cart");
+      navigate("/");
     } catch (error) {
       console.log("error", error);
     }
@@ -88,7 +96,11 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
     if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
+      const data = JSON.parse(storedCart);
+      setCartItems(data);
+
+      console.log("useEffect", data);
+      setCartCount(data.length);
     }
 
     fetchUserWallets();
@@ -97,6 +109,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
   const handleRemove = (id: number) => {
     const updatedCart = cartItems.filter((item) => item.id !== id);
     setCartItems(updatedCart);
+    setCartCount(updatedCart.length);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
@@ -106,7 +119,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-
+      <Navbar cartCount={cartCount} />
       <Container sx={{ mt: 4 }}>
         <Typography variant="h4" gutterBottom>
           Your Cart
@@ -178,7 +191,10 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
                 labelId="wallet-label"
                 value={selectedWallet}
                 label="Payment Method"
-                onChange={(e) => setSelectedWallet(e.target.value as number)}
+                onChange={(e) => {
+                  setSelectedWallet(e.target.value as number);
+                  setWalletError(false);
+                }}
               >
                 {wallets.map((wallet) => (
                   <MenuItem key={wallet.id} value={wallet.id}>
@@ -186,6 +202,11 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
                   </MenuItem>
                 ))}
               </Select>
+              {walletError && (
+                <Typography variant="caption" color="error">
+                  Please select a payment method
+                </Typography>
+              )}
             </FormControl>
 
             <Grid size={{ xs: 12 }}>

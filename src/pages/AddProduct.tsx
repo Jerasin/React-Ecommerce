@@ -16,6 +16,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
+import AppTheme from "../shared-theme/AppTheme";
+import Navbar from "../components/Navbar";
 
 interface FormValues {
   name: string;
@@ -28,7 +30,7 @@ interface FormValues {
   saleCloseDate?: Dayjs | null;
 }
 
-export default function AddProduct() {
+export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const [productCates, setProductCates] = useState<any>(null);
 
@@ -102,132 +104,135 @@ export default function AddProduct() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <CssBaseline />
-      <Typography variant="h4" gutterBottom>
-        Add Product
-      </Typography>
+    <AppTheme {...props}>
+      <CssBaseline enableColorScheme />
+      <Navbar cartCount={0} />
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Add Product
+        </Typography>
 
-      <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <TextField
-          label="Name"
-          fullWidth
-          margin="normal"
-          {...register("name", { required: "Name is required" })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-        />
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <TextField
+            label="Name"
+            fullWidth
+            margin="normal"
+            {...register("name", { required: "Name is required" })}
+            error={!!errors.name}
+            helperText={errors.name?.message}
+          />
 
-        <TextField
-          label="Description"
-          fullWidth
-          margin="normal"
-          multiline
-          rows={3}
-          {...register("description")}
-        />
+          <TextField
+            label="Description"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={3}
+            {...register("description")}
+          />
 
-        <TextField
-          label="Image URL"
-          fullWidth
-          margin="normal"
-          {...register("imgUrl")}
-        />
+          <TextField
+            label="Image URL"
+            fullWidth
+            margin="normal"
+            {...register("imgUrl")}
+          />
 
-        <TextField
-          label="Price"
-          type="number"
-          fullWidth
-          margin="normal"
-          {...register("price", {
-            required: "Price is required",
-            valueAsNumber: true,
-            min: { value: 0, message: "Price must be >= 0" },
-          })}
-          error={!!errors.price}
-          helperText={errors.price?.message}
-        />
+          <TextField
+            label="Price"
+            type="number"
+            fullWidth
+            margin="normal"
+            {...register("price", {
+              required: "Price is required",
+              valueAsNumber: true,
+              min: { value: 0, message: "Price must be >= 0" },
+            })}
+            error={!!errors.price}
+            helperText={errors.price?.message}
+          />
 
-        <TextField
-          label="Amount"
-          type="number"
-          fullWidth
-          margin="normal"
-          {...register("amount", {
-            required: "Amount is required",
-            valueAsNumber: true,
-            min: { value: 0, message: "Amount must be >= 0" },
-          })}
-          error={!!errors.amount}
-          helperText={errors.amount?.message}
-        />
+          <TextField
+            label="Amount"
+            type="number"
+            fullWidth
+            margin="normal"
+            {...register("amount", {
+              required: "Amount is required",
+              valueAsNumber: true,
+              min: { value: 0, message: "Amount must be >= 0" },
+            })}
+            error={!!errors.amount}
+            helperText={errors.amount?.message}
+          />
 
-        {productCates != null ? (
-          <Grid size={{ xs: 12 }} sx={{ marginY: 2 }}>
-            <Controller
-              name="productCategoryId"
-              control={control}
-              defaultValue={productCates[0].id}
-              rules={{ required: "Please select a category" }}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  select
-                  fullWidth
-                  label="Product Category"
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                >
-                  {productCates?.map((item: any) => (
-                    <MenuItem key={item.id} value={item.id}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-            />
-          </Grid>
-        ) : (
-          <></>
-        )}
-
-        <Controller
-          name="saleOpenDate"
-          control={control}
-          render={({ field }) => (
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="Select date"
-                value={field.value}
-                onChange={(date) => field.onChange(date)}
+          {productCates != null ? (
+            <Grid size={{ xs: 12 }} sx={{ marginY: 2 }}>
+              <Controller
+                name="productCategoryId"
+                control={control}
+                defaultValue={productCates[0].id}
+                rules={{ required: "Please select a category" }}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    select
+                    fullWidth
+                    label="Product Category"
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                  >
+                    {productCates?.map((item: any) => (
+                      <MenuItem key={item.id} value={item.id}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
               />
-            </LocalizationProvider>
+            </Grid>
+          ) : (
+            <></>
           )}
-        />
 
-        <Controller
-          name="saleCloseDate"
-          control={control}
-          render={({ field }) => (
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="Sale Close Date"
-                value={field.value}
-                onChange={(date) => field.onChange(date)}
-              />
-            </LocalizationProvider>
-          )}
-        />
+          <Controller
+            name="saleOpenDate"
+            control={control}
+            render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Select date"
+                  value={field.value}
+                  onChange={(date) => field.onChange(date)}
+                />
+              </LocalizationProvider>
+            )}
+          />
 
-        <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between" }}>
-          <Button variant="outlined" onClick={() => navigate(-1)}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="contained" color="primary">
-            Add Product
-          </Button>
+          <Controller
+            name="saleCloseDate"
+            control={control}
+            render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Sale Close Date"
+                  value={field.value}
+                  onChange={(date) => field.onChange(date)}
+                />
+              </LocalizationProvider>
+            )}
+          />
+
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "space-between" }}>
+            <Button variant="outlined" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" color="primary">
+              Add Product
+            </Button>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </AppTheme>
   );
 }

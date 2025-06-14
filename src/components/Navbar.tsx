@@ -34,15 +34,22 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
     {
       name: "Home",
       path: "/home",
+      isAdmin: true,
     },
     {
       name: "Product",
       path: "/product",
+      isAdmin: true,
     },
     {
-      name: "Product Category",
-      path: "/product-category",
+      name: "History",
+      path: "/history",
+      isAdmin: false,
     },
+    // {
+    //   name: "Product Category",
+    //   path: "/product-category",
+    // },
   ];
   const user = useUserStore((state) => state.user);
 
@@ -72,18 +79,45 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
       </Typography>
       <Divider />
       <List>
-        {staticMenu.map((item) => (
-          <ListItem key={item.name} disablePadding>
-            <ListItemButton sx={{ textAlign: "left" }}>
-              <ListItemText
-                onClick={() => {
-                  navigate(item.path);
-                }}
-                primary={item.name}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {staticMenu.map((item) => {
+          if (item.isAdmin) {
+            if (
+              user?.userRole.permissionInfos != null &&
+              user?.userRole.permissionInfos.length > 0
+            ) {
+              return (
+                <ListItem key={item.name} disablePadding>
+                  <ListItemButton sx={{ textAlign: "left" }}>
+                    <ListItemText
+                      onClick={() => {
+                        navigate(item.path);
+                      }}
+                      primary={item.name}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            }
+          }
+
+          if (
+            user?.userRole.permissionInfos != null &&
+            user?.userRole.permissionInfos.length == 0
+          ) {
+            return (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton sx={{ textAlign: "left" }}>
+                  <ListItemText
+                    onClick={() => {
+                      navigate(item.path);
+                    }}
+                    primary={item.name}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          }
+        })}
       </List>
     </Box>
   );
@@ -115,23 +149,55 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
               marginRight: 4,
             }}
           >
-            {staticMenu.map((item) => (
-              <Button
-                key={item.name}
-                color="inherit"
-                onClick={() => navigate(item.path)}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 500,
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255 )", // สี hover จาง ๆ
-                  },
-                  color: "black"
-                }}
-              >
-                {item.name}
-              </Button>
-            ))}
+            {staticMenu.map((item) => {
+              if (item.isAdmin) {
+                if (
+                  user?.userRole.permissionInfos != null &&
+                  user.userRole.permissionInfos.length > 0
+                ) {
+                  return (
+                    <Button
+                      key={item.name}
+                      color="inherit"
+                      onClick={() => navigate(item.path)}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 500,
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 255, 255 )", // สี hover จาง ๆ
+                        },
+                        color: "black",
+                      }}
+                    >
+                      {item.name}
+                    </Button>
+                  );
+                }
+              }
+
+              if (
+                user?.userRole.permissionInfos != null &&
+                user.userRole.permissionInfos.length == 0
+              ) {
+                return (
+                  <Button
+                    key={item.name}
+                    color="inherit"
+                    onClick={() => navigate(item.path)}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: 500,
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255 )", // สี hover จาง ๆ
+                      },
+                      color: "black",
+                    }}
+                  >
+                    {item.name}
+                  </Button>
+                );
+              }
+            })}
           </Box>
 
           <div>

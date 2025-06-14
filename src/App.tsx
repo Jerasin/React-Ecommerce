@@ -8,6 +8,7 @@ import Product from "./pages/Product";
 import Cart from "./pages/Cart";
 import BackofficeSignUp from "./pages/BackofficeSignUp";
 import AddProduct from "./pages/AddProduct";
+import History from "./pages/History";
 
 function App() {
   return (
@@ -73,6 +74,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AddProduct />
+          </ProtectedRoute>
+        }
+      />
+       <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <History />
           </ProtectedRoute>
         }
       />
