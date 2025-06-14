@@ -9,6 +9,8 @@ import Cart from "./pages/Cart";
 import BackofficeSignUp from "./pages/BackofficeSignUp";
 import AddProduct from "./pages/AddProduct";
 import History from "./pages/History";
+import Profile from "./pages/Profile";
+import WalletManager from "./pages/Wallet";
 
 function App() {
   return (
@@ -77,11 +79,27 @@ function App() {
           </ProtectedRoute>
         }
       />
-       <Route
+      <Route
         path="/history"
         element={
           <ProtectedRoute>
             <History />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wallet"
+        element={
+          <ProtectedRoute>
+            <WalletManager />
           </ProtectedRoute>
         }
       />

@@ -245,7 +245,24 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleClose}>Profile</MenuItem>
+              <MenuItem
+                onClick={() => {
+                  navigate("/profile");
+                }}
+              >
+                Profile
+              </MenuItem>
+              {user?.userRole.permissionInfos.length == 0 ? (
+                <MenuItem
+                  onClick={() => {
+                    navigate("/wallet");
+                  }}
+                >
+                  WalletManager
+                </MenuItem>
+              ) : (
+                null
+              )}
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </div>

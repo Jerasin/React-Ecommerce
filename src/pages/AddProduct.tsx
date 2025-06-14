@@ -14,7 +14,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetch } from "../utils/client";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
@@ -32,31 +32,55 @@ interface FormValues {
 
 export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [productCates, setProductCates] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState<number>(0);
+
+  const handleMenuScroll = () => {
+    if (!menuRef.current || loading) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = menuRef.current;
+
+    const nearBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+    if (nearBottom && productCates.length < total) {
+      setPage((prev) => prev + 1); // โหลดหน้าเพิ่ม
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async (page: number) => {
+    const fetchData = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
         if (!token) return;
-        const productCate = await useFetch<any>(`products/categories?${page}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const productCate = await useFetch<any>(
+          `products/categories?page=${page}&pageSize=${pageSize}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (productCate != null) {
           setProductCates(productCate.data);
+          setTotal(productCate.totalPage);
         }
       } catch (error) {
         console.log("Error", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData(1);
-  }, []);
+    fetchData();
+  }, [page]);
 
   const {
     register,
@@ -181,6 +205,27 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                     label="Product Category"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
+                    slotProps={{
+                      select: {
+                        MenuProps: {
+                          PaperProps: {
+                            sx: {
+                              maxHeight: 200,
+                              overflowY: "auto",
+                            },
+                            ref: (node: HTMLDivElement) => {
+                              menuRef.current = node;
+                              if (node) {
+                                node.addEventListener(
+                                  "scroll",
+                                  handleMenuScroll
+                                );
+                              }
+                            },
+                          },
+                        },
+                      },
+                    }}
                   >
                     {productCates?.map((item: any) => (
                       <MenuItem key={item.id} value={item.id}>

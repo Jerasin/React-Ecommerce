@@ -107,8 +107,9 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
       if (!token) return;
 
       const userInfo = await getUserInfo(token);
-      if (userInfo?.data?.data) {
-        setUser(userInfo.data.data);
+      if (userInfo?.data) {
+        console.log("Set userInfo")
+        setUser(userInfo.data);
       }
 
       const data = await getProducts(page, token);
