@@ -25,6 +25,8 @@ interface Product {
   price: number;
   amount: number;
   imgUrl?: string;
+  saleOpenDate?: string;
+  saleCloseDate?: string;
 }
 
 interface ReponseProduct {
@@ -108,7 +110,7 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
 
       const userInfo = await getUserInfo(token);
       if (userInfo?.data) {
-        console.log("Set userInfo")
+        console.log("Set userInfo");
         setUser(userInfo.data);
       }
 
@@ -222,19 +224,76 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
                       </Typography>
                     </Grid>
                   </Grid>
+
+                  {product.saleOpenDate != null ? (
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid size={{ xs: 4 }}>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                          Open Sell Date:
+                        </Typography>
+                      </Grid>
+
+                      <Grid size={{ xs: 8 }}>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                          {new Date(product.saleOpenDate).toLocaleString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                              timeZone: "Asia/Bangkok",
+                            }
+                          )}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  ) : null}
+
+                     {product.saleCloseDate != null ? (
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid size={{ xs: 4 }}>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                          Close Sell Date:
+                        </Typography>
+                      </Grid>
+
+                      <Grid size={{ xs: 8 }}>
+                        <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                          {new Date(product.saleCloseDate).toLocaleString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                              timeZone: "Asia/Bangkok",
+                            }
+                          )}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  ) : null}
                 </CardContent>
 
-                <CardActions sx={{ mt: "auto", p: 2 }}>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={() => {
-                      addCart(product);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
-                </CardActions>
+                {user?.userRole.permissionInfos != null &&
+                user.userRole.permissionInfos.length === 0  && product.amount > 0 ? (
+                  <CardActions sx={{ mt: "auto", p: 2 }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={() => {
+                        addCart(product);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </CardActions>
+                ) : null}
               </Card>
             </Grid>
           )) ?? []}

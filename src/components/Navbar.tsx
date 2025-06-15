@@ -23,6 +23,7 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useUserStore, type UserInfoStore } from "../store/userStore";
 import { useEffect } from "react";
 import { useFetch } from "../utils/client";
+import ColorModeSelect from "../shared-theme/ColorModeSelect";
 
 interface MenuAppBarOption {
   cartCount: number;
@@ -200,7 +201,7 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
                         textTransform: "none",
                         fontWeight: 500,
                         "&:hover": {
-                          backgroundColor: "rgba(255, 255, 255 )", // สี hover จาง ๆ
+                          backgroundColor: "rgba(255, 255, 255 )",
                         },
                         color: "black",
                       }}
@@ -224,7 +225,7 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
                       textTransform: "none",
                       fontWeight: 500,
                       "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255 )", // สี hover จาง ๆ
+                        backgroundColor: "rgba(255, 255, 255 )",
                       },
                       color: "black",
                     }}
@@ -245,7 +246,7 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
                 aria-label={`${cartCount} items in cart`}
                 color="inherit"
                 onClick={() => {
-                  navigate("/cart"); // สมมติเปลี่ยนเส้นทางไปหน้า cart
+                  navigate("/cart");
                 }}
               >
                 <Badge badgeContent={cartCount} color="error">
@@ -297,6 +298,18 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
                   WalletManager
                 </MenuItem>
               ) : null}
+
+              {user?.userRole != null &&
+              user?.userRole.permissionInfos.length > 0 ? (
+                <MenuItem
+                  onClick={() => {
+                    navigate("/user-management");
+                  }}
+                >
+                  UserManagement
+                </MenuItem>
+              ) : null}
+
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </div>
@@ -307,7 +320,7 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }} // Better mobile performance
+        ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: "block", sm: "none" },
           "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },

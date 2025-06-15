@@ -1,0 +1,164 @@
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Container,
+  CssBaseline,
+  IconButton,
+  Pagination,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import { Edit, Delete } from "@mui/icons-material";
+import AppTheme from "../shared-theme/AppTheme";
+import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
+import { useFetch } from "../utils/client";
+import { useNavigate } from "react-router-dom";
+
+export default function UserManagement(props: {
+  disableCustomTheme?: boolean;
+}) {
+  const [userList, setUserList] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalPage, setTotalPage] = useState<number>(0);
+  const navigate = useNavigate();
+  const [roles, setRoles] = useState<{ id: number; name: string }[] | null>(
+    null
+  );
+
+  const fetchRoles = async (token: string) => {
+    const res = await useFetch<any>(`role_infos`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res) {
+      setRoles(res.data);
+    }
+  };
+
+  const fetchUsers = async (token: string) => {
+    try {
+      const res = await useFetch<any>(`users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res) {
+        setUserList(res.data);
+        setTotalPage(res.totalPage);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      await fetchUsers(token);
+      await fetchRoles(token);
+    };
+
+    fetchData();
+  }, []);
+  return (
+    <AppTheme {...props}>
+      <CssBaseline enableColorScheme />
+      <Navbar cartCount={0} />
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          User Management
+        </Typography>
+
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              navigate("/user/create");
+            }}
+          >
+            Add User
+          </Button>
+        </Box>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Avatar</TableCell>
+                <TableCell>Username</TableCell>
+                <TableCell>Full Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {userList?.map((user) => (
+                <TableRow key={user.username}>
+                  <TableCell>
+                    <Avatar>{user?.avatar[0]?.toUpperCase() ?? null}</Avatar>
+                  </TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.fullname}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {roles?.find((i) => i.id == user.roleId)?.name ?? '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.isActive ? "Active" : "Inactive"}
+                      color={user.isActive ? "success" : "default"}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      onClick={() => {
+                        navigate(`/user/${user.id}/edit`);
+                      }}
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton color="error" size="small" disabled>
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              )) ?? []}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <Pagination
+          sx={{ marginY: 4 }}
+          defaultPage={page}
+          count={totalPage}
+          color="primary"
+          onChange={(_, v) => {
+            setPage(v);
+          }}
+        />
+      </Container>
+    </AppTheme>
+  );
+}

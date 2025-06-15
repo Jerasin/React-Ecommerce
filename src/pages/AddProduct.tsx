@@ -33,30 +33,33 @@ interface FormValues {
 export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(5);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [productCates, setProductCates] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [productCates, setProductCates] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isFetchingRef = useRef(false);
 
   const handleMenuScroll = () => {
-    if (!menuRef.current || loading) return;
+    if (!menuRef.current || isFetchingRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = menuRef.current;
+    const nearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+    const totalPages = Math.ceil(total / pageSize);
 
-    const nearBottom = scrollTop + clientHeight >= scrollHeight - 10;
-
-    if (nearBottom && productCates.length < total) {
-      setPage((prev) => prev + 1); // โหลดหน้าเพิ่ม
+    if (nearBottom && productCates.length < total && page < totalPages) {
+      isFetchingRef.current = true; 
+      setPage((prev) => prev + 1);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const token = localStorage.getItem("token");
         if (!token) return;
+        if (page > Math.ceil(total / pageSize) && isLoading) return;
+
         const productCate = await useFetch<any>(
           `products/categories?page=${page}&pageSize=${pageSize}`,
           {
@@ -69,18 +72,39 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
         );
 
         if (productCate != null) {
-          setProductCates(productCate.data);
-          setTotal(productCate.totalPage);
+          setProductCates((prev: any) => {
+            const existingIds = new Set(prev.map((item: any) => item.id));
+            const newItems = productCate.data.filter(
+              (item: any) => !existingIds.has(item.id)
+            );
+            const updated = [...prev, ...newItems];
+            return updated;
+          });
+
+          setTotal(productCate.total);
         }
       } catch (error) {
         console.log("Error", error);
       } finally {
-        setLoading(false);
+        setIsLoading(true);
+        isFetchingRef.current = false;
       }
     };
 
     fetchData();
   }, [page]);
+
+  useEffect(() => {
+    const currentMenu = menuRef.current;
+    if (currentMenu) {
+      currentMenu.addEventListener("scroll", handleMenuScroll);
+    }
+    return () => {
+      if (currentMenu) {
+        currentMenu.removeEventListener("scroll", handleMenuScroll);
+      }
+    };
+  }, [productCates, total]);
 
   const {
     register,
@@ -103,6 +127,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const onSubmit = async (data: FormValues) => {
     const token = localStorage.getItem("token");
     if (!token) return;
+
     const payload = {
       ...data,
       saleOpenDate: data.saleOpenDate
@@ -150,7 +175,6 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
             label="Description"
             fullWidth
             margin="normal"
-            multiline
             rows={3}
             {...register("description")}
           />
@@ -190,12 +214,12 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
             helperText={errors.amount?.message}
           />
 
-          {productCates != null ? (
-            <Grid size={{ xs: 12 }} sx={{ marginY: 2 }}>
+          {productCates.length > 0 && (
+            <Grid sx={{ marginY: 2 }}>
               <Controller
                 name="productCategoryId"
                 control={control}
-                defaultValue={productCates[0].id}
+                defaultValue={productCates[0]?.id ?? ""}
                 rules={{ required: "Please select a category" }}
                 render={({ field, fieldState }) => (
                   <TextField
@@ -209,13 +233,10 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                       select: {
                         MenuProps: {
                           PaperProps: {
-                            sx: {
-                              maxHeight: 200,
-                              overflowY: "auto",
-                            },
+                            sx: { maxHeight: 200, overflowY: "auto" },
                             ref: (node: HTMLDivElement) => {
-                              menuRef.current = node;
-                              if (node) {
+                              if (node && !menuRef.current) {
+                                menuRef.current = node;
                                 node.addEventListener(
                                   "scroll",
                                   handleMenuScroll
@@ -227,7 +248,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                       },
                     }}
                   >
-                    {productCates?.map((item: any) => (
+                    {productCates.map((item: any) => (
                       <MenuItem key={item.id} value={item.id}>
                         {item.name}
                       </MenuItem>
@@ -236,8 +257,6 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                 )}
               />
             </Grid>
-          ) : (
-            <></>
           )}
 
           <Controller
@@ -246,7 +265,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
             render={({ field }) => (
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
-                  label="Select date"
+                  label="Sale Open Date"
                   value={field.value}
                   onChange={(date) => field.onChange(date)}
                 />

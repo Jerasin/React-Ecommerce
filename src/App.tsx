@@ -13,6 +13,9 @@ import Profile from "./pages/Profile";
 import WalletManager from "./pages/Wallet";
 import AddWallet from "./pages/AddWallet";
 import OrderDetail from "./pages/OrderDetail";
+import UserManagement from "./pages/UserManagement";
+import EditUser from "./pages/EditUser";
+import CreateUser from "./pages/CreateUser";
 
 function App() {
   return (
@@ -113,11 +116,35 @@ function App() {
           </ProtectedRoute>
         }
       />
-       <Route
+      <Route
         path="/order-detail/:orderId"
         element={
           <ProtectedRoute>
             <OrderDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user-management"
+        element={
+          <ProtectedRoute>
+            <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user/:userId/edit"
+        element={
+          <ProtectedRoute>
+            <EditUser />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user/create"
+        element={
+          <ProtectedRoute>
+            <CreateUser />
           </ProtectedRoute>
         }
       />

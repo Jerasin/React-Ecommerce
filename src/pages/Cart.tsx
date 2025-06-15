@@ -209,7 +209,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
               )}
             </FormControl>
 
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }} marginBottom={4}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="h6" align="right">
                 Total: ${getTotalPrice().toFixed(2)}

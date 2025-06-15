@@ -17,14 +17,13 @@ import Navbar from "../components/Navbar";
 import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
 
-// ตัวอย่าง interface ของ wallet
 interface Wallet {
   id: number;
   name: string;
   token: string;
   user_id: number;
   uuid: string;
-  value: number
+  value: number;
 }
 
 export default function WalletManager(props: { disableCustomTheme?: boolean }) {
@@ -34,7 +33,7 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
   const [totalPage, setTotalPage] = useState(10);
 
   const navigate = useNavigate();
-  
+
   const fetchWallets = async () => {
     const token = localStorage.getItem("token");
     if (token == null) return;
@@ -64,7 +63,6 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
       setCartCount(cartArr.length);
     }
 
-
     fetchData();
   }, []);
 
@@ -88,9 +86,14 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
           mb={3}
         >
           <Typography variant="h4">Wallet Management</Typography>
-          <Button variant="contained" startIcon={<Add />} color="primary" onClick={()=>{
-            navigate("/add-wallet")
-          }}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            color="primary"
+            onClick={() => {
+              navigate("/add-wallet");
+            }}
+          >
             Add Wallet
           </Button>
         </Box>
@@ -105,7 +108,7 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
                     Token: {wallet.token}
                   </Typography>
                   <Typography variant="body2">UUID: {wallet.uuid}</Typography>
-                   <Typography variant="body2">Value: {wallet.value}</Typography>
+                  <Typography variant="body2">Value: {wallet.value}</Typography>
                   <Box display="flex" justifyContent="flex-end" mt={2}>
                     <IconButton
                       color="primary"

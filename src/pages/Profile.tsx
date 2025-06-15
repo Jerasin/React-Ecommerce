@@ -14,10 +14,11 @@ import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
+import ColorModeSelect from "../shared-theme/ColorModeSelect";
 
 export interface PermissionInfo {
   id: number;
-  createdAt: string; // หรือใช้ Date หากคุณจะ parse เป็น Date object
+  createdAt: string; 
   updatedAt: string;
   name: string;
 }
@@ -79,9 +80,13 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
       <CssBaseline enableColorScheme />
       <Navbar cartCount={cartCount} />
       <Box sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
+        <Box display={"flex"} justifyContent="space-between" alignItems="center" marginBottom={2}>
+          <Typography variant="h4" gutterBottom>
           Profile
         </Typography>
+
+        <ColorModeSelect />
+        </Box>
 
         {user != null ? (
           <Card sx={{ p: 3 }}>

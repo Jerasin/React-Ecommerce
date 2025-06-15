@@ -23,9 +23,9 @@ interface OrderItem {
   productName: string;
 }
 
-export default function OrderDetail() {
+export default function OrderDetail(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
-  const { orderId } = useParams(); // สมมุติว่ารับ orderId จาก URL
+  const { orderId } = useParams();
   const [items, setItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function OrderDetail() {
   };
 
   return (
-    <AppTheme>
+    <AppTheme {...props}>
       <CssBaseline />
       <Navbar cartCount={0} />
       <Container maxWidth="md" sx={{ mt: 4 }}>
@@ -89,7 +89,7 @@ export default function OrderDetail() {
           Total Price: ${getTotal().toFixed(2)}
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }} marginBottom={4}>
           <Button variant="contained" onClick={() => navigate(-1)}>
             Back
           </Button>

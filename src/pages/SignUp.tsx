@@ -66,7 +66,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     password: "",
     fullName: "",
     email: "",
-    roleInfoId: 2,
+    roleId: 2,
   });
   const navigate = useNavigate();
 

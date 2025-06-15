@@ -73,7 +73,6 @@ const History = (props: { disableCustomTheme?: boolean }) => {
   const handleDetail = (id: number) => {
     console.log("Go to detail of order id:", id);
     navigate(`/order-detail/${id}`)
-    // คุณสามารถ navigate ไปหน้ารายละเอียด เช่น navigate(`/history/${id}`)
   };
 
   return (

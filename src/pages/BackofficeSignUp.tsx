@@ -66,7 +66,7 @@ export default function BackofficeSignUp(props: { disableCustomTheme?: boolean }
     password: "",
     fullName: "",
     email: "",
-    roleInfoId: 1,
+    roleId: 1,
   });
   const navigate = useNavigate();
 
