@@ -16,6 +16,7 @@ import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
+import DialogError from "../components/DialogError";
 
 interface Wallet {
   id: number;
@@ -31,23 +32,35 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
   const [cartCount, setCartCount] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(10);
-
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  const fetchWallets = async () => {
-    const token = localStorage.getItem("token");
-    if (token == null) return;
-    const res = await useFetch<any>(`wallets`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
-    if (res) {
-      setWallets(res.data);
-      setTotalPage(res.totalPage);
+  const fetchWallets = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token == null) return;
+      const res = await useFetch<any>(`wallets`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res) {
+        setWallets(res.data);
+        setTotalPage(res.totalPage);
+      }
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -139,6 +152,12 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
           onChange={(_, v) => {
             setPage(v);
           }}
+        />
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
         />
       </Container>
     </AppTheme>

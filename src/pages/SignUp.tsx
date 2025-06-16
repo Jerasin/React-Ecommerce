@@ -17,6 +17,8 @@ import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { SitemarkIcon } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
+import { useFetch } from "../utils/client";
+import DialogError from "../components/DialogError";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -69,6 +71,13 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     roleId: 2,
   });
   const navigate = useNavigate();
+  const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,28 +88,22 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const apiUrl = import.meta.env.VITE_API_URL;
-
     try {
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      event.preventDefault();
+      const response = await useFetch(`auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Something went wrong");
-      }
-
-      console.log("Register success:", result);
+      console.log("Register success:", response);
       navigate("/sign-in");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error:", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -209,6 +212,12 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             </Typography>
           </Box>
         </Card>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </SignUpContainer>
     </AppTheme>
   );

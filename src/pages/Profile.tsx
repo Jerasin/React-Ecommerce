@@ -15,10 +15,12 @@ import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
+import { useNavigate } from "react-router-dom";
+import DialogError from "../components/DialogError";
 
 export interface PermissionInfo {
   id: number;
-  createdAt: string; 
+  createdAt: string;
   updatedAt: string;
   name: string;
 }
@@ -43,22 +45,36 @@ export interface UserProfile {
 const Profile = (props: { disableCustomTheme?: boolean }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
   const fetchUser = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    const user = await useFetch<any>(`users/info`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const user = await useFetch<any>(`users/info`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    console.log("user", user);
-    if (user) {
-      setUser(user.data);
+      console.log("user", user);
+      if (user) {
+        setUser(user.data);
+      }
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -80,12 +96,17 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
       <CssBaseline enableColorScheme />
       <Navbar cartCount={cartCount} />
       <Box sx={{ p: 4 }}>
-        <Box display={"flex"} justifyContent="space-between" alignItems="center" marginBottom={2}>
+        <Box
+          display={"flex"}
+          justifyContent="space-between"
+          alignItems="center"
+          marginBottom={2}
+        >
           <Typography variant="h4" gutterBottom>
-          Profile
-        </Typography>
+            Profile
+          </Typography>
 
-        <ColorModeSelect />
+          <ColorModeSelect />
         </Box>
 
         {user != null ? (
@@ -165,6 +186,12 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
         ) : (
           <></>
         )}
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Box>
     </AppTheme>
   );

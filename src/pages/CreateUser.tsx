@@ -14,10 +14,11 @@ import { useNavigate } from "react-router-dom";
 import { useFetch } from "../utils/client";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
+import DialogError from "../components/DialogError";
 
 interface User {
   username: string;
-  password:string;
+  password: string;
   fullname: string;
   email: string;
   avatar: string;
@@ -35,22 +36,30 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
     avatar: "",
     roleId: 0,
     isActive: true,
-    password: ""
+    password: "",
   });
 
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const fetchRoles = async (token: string) => {
-    const res = await useFetch<any>(`role_infos`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await useFetch<any>(`role_infos`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (res) {
-      setRoles(res.data);
+      if (res) {
+        setRoles(res.data);
+      }
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -84,8 +93,8 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     try {
+      e.preventDefault();
       const token = localStorage.getItem("token");
       if (!token) return;
 
@@ -99,9 +108,16 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
       });
 
       navigate("/user-management");
-    } catch (error) {
-      console.log("error", error);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
+  };
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
   };
 
   return (
@@ -141,9 +157,10 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
             onChange={handleChange}
             fullWidth
           />
-           <TextField
+          <TextField
             label="Password"
             name="password"
+            type="password"
             value={formData.password}
             onChange={handleChange}
             fullWidth
@@ -197,7 +214,7 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
                   avatar: "",
                   roleId: 0,
                   isActive: true,
-                  password: ""
+                  password: "",
                 })
               }
             >
@@ -208,6 +225,12 @@ const CreateUser = (props: { disableCustomTheme?: boolean }) => {
             </Button>
           </Box>
         </Box>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Card>
     </AppTheme>
   );

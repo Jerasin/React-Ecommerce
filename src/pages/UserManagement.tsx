@@ -22,6 +22,7 @@ import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
+import DialogError from "../components/DialogError";
 
 export default function UserManagement(props: {
   disableCustomTheme?: boolean;
@@ -33,18 +34,31 @@ export default function UserManagement(props: {
   const [roles, setRoles] = useState<{ id: number; name: string }[] | null>(
     null
   );
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
   const fetchRoles = async (token: string) => {
-    const res = await useFetch<any>(`role_infos`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await useFetch<any>(`role_infos`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (res) {
-      setRoles(res.data);
+      if (res) {
+        setRoles(res.data);
+      }
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -62,8 +76,10 @@ export default function UserManagement(props: {
         setUserList(res.data);
         setTotalPage(res.totalPage);
       }
-    } catch (error) {
-      console.log("error", error);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
   useEffect(() => {
@@ -120,7 +136,7 @@ export default function UserManagement(props: {
                   <TableCell>{user.fullname}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {roles?.find((i) => i.id == user.roleId)?.name ?? '-'}
+                    {roles?.find((i) => i.id == user.roleId)?.name ?? "-"}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -157,6 +173,12 @@ export default function UserManagement(props: {
           onChange={(_, v) => {
             setPage(v);
           }}
+        />
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
         />
       </Container>
     </AppTheme>

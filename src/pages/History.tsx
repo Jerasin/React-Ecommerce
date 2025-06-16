@@ -14,6 +14,7 @@ import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
+import DialogError from "../components/DialogError";
 
 interface HistoryItem {
   id: number;
@@ -35,7 +36,13 @@ const History = (props: { disableCustomTheme?: boolean }) => {
   const [histories, setHistories] = useState<HistoryItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
-  
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+  };
+
   const fetchHistories = async (page: number) => {
     try {
       const token = localStorage.getItem("token");
@@ -58,8 +65,10 @@ const History = (props: { disableCustomTheme?: boolean }) => {
         setHistories(histories.data);
         setTotalPage(histories.totalPage);
       }
-    } catch (error) {
-      console.log("error", error);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -72,7 +81,7 @@ const History = (props: { disableCustomTheme?: boolean }) => {
 
   const handleDetail = (id: number) => {
     console.log("Go to detail of order id:", id);
-    navigate(`/order-detail/${id}`)
+    navigate(`/order-detail/${id}`);
   };
 
   return (
@@ -140,6 +149,12 @@ const History = (props: { disableCustomTheme?: boolean }) => {
           onChange={(_, v) => {
             setPage(v);
           }}
+        />
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
         />
       </Container>
     </AppTheme>

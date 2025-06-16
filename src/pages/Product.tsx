@@ -17,6 +17,7 @@ import React, { useEffect } from "react";
 import { useFetch } from "../utils/client";
 import { useUserStore } from "../store/userStore";
 import { useNavigate } from "react-router-dom";
+import DialogError from "../components/DialogError";
 
 interface Product {
   id: number;
@@ -48,6 +49,8 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
+  const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
 
   const addCart = (product: Product) => {
     const cart = localStorage.getItem("cart");
@@ -70,6 +73,11 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
     }
   };
 
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
+
   const getProducts = async (page: number, token: string) => {
     try {
       const response = await useFetch<ReponseProduct>(`products?page=${page}`, {
@@ -81,8 +89,10 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
       });
 
       return response;
-    } catch (err) {
-      console.error("Error:", err);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -97,8 +107,10 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
       });
 
       return response;
-    } catch (err) {
-      console.error("Error:", err);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -252,7 +264,7 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
                     </Grid>
                   ) : null}
 
-                     {product.saleCloseDate != null ? (
+                  {product.saleCloseDate != null ? (
                     <Grid container spacing={2} alignItems="center">
                       <Grid size={{ xs: 4 }}>
                         <Typography variant="subtitle1" sx={{ mt: 2 }}>
@@ -281,7 +293,8 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
                 </CardContent>
 
                 {user?.userRole.permissionInfos != null &&
-                user.userRole.permissionInfos.length === 0  && product.amount > 0 ? (
+                user.userRole.permissionInfos.length === 0 &&
+                product.amount > 0 ? (
                   <CardActions sx={{ mt: "auto", p: 2 }}>
                     <Button
                       variant="contained"
@@ -307,6 +320,12 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
           onChange={(_, v) => {
             setPage(v);
           }}
+        />
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
         />
       </Container>
     </AppTheme>

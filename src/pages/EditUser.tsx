@@ -14,6 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useFetch } from "../utils/client";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
+import DialogError from "../components/DialogError";
 
 interface User {
   id: number;
@@ -33,33 +34,45 @@ const EditUser = (props: { disableCustomTheme?: boolean }) => {
   const [roles, setRoles] = useState<{ id: number; name: string }[] | null>(
     null
   );
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const fetchUser = async (token: string) => {
-    const res = await useFetch<any>(`users/${userId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await useFetch<any>(`users/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (res) {
-      setFormData(res.data.user);
-      setDefaultData(res.data.user);
+      if (res) {
+        setFormData(res.data.user);
+        setDefaultData(res.data.user);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
   const fetchRoles = async (token: string) => {
-    const res = await useFetch<any>(`role_infos`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await useFetch<any>(`role_infos`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (res) {
-      setRoles(res.data);
+      if (res) {
+        setRoles(res.data);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -116,9 +129,15 @@ const EditUser = (props: { disableCustomTheme?: boolean }) => {
         body: formData,
       });
       navigate("/user-management");
-    } catch (error) {
-      console.log("error", error);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
+  };
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
   };
 
   return (
@@ -213,6 +232,12 @@ const EditUser = (props: { disableCustomTheme?: boolean }) => {
           </Box>
         </Card>
       ) : null}
+
+      <DialogError
+        errorMessage={errorMessage}
+        errorDialogOpen={errorDialogOpen}
+        setErrorDialogOpen={handleCloseDialog}
+      />
     </AppTheme>
   );
 };

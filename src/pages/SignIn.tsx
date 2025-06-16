@@ -19,15 +19,7 @@ import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { SitemarkIcon } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
 import { useFetch } from "../utils/client";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import Slide from "@mui/material/Slide";
-import type { TransitionProps } from "@mui/material/transitions";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { forwardRef } from "react";
+import DialogError from "../components/DialogError";
 
 interface SignInDataResponse {
   refresh_token: string;
@@ -39,15 +31,6 @@ interface SignInResponse {
   response_key: string;
   response_message: string;
 }
-
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="down" ref={ref} {...props} />;
-});
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -100,6 +83,11 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState("");
   const navigate = useNavigate();
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -209,7 +197,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               <Button type="submit" fullWidth variant="contained">
                 Sign in
               </Button>
-              <Link
+              {/* <Link
                 component="button"
                 type="button"
                 onClick={handleClickOpen}
@@ -217,10 +205,10 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 sx={{ alignSelf: "center" }}
               >
                 Forgot your password?
-              </Link>
+              </Link> */}
             </Box>
 
-            <Divider>or</Divider>
+            {/* <Divider>or</Divider> */}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <Typography sx={{ textAlign: "center" }}>
                 Don&apos;t have an account?{" "}
@@ -235,46 +223,11 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             </Box>
           </Card>
 
-          <Dialog
-            open={errorDialogOpen}
-            onClose={() => setErrorDialogOpen(false)}
-            slots={{ transition: Transition }}
-            keepMounted
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-            fullWidth
-            maxWidth="sm"
-          >
-            <DialogTitle
-              id="alert-dialog-title"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                color: "error.main",
-              }}
-            >
-              <ErrorOutlineIcon color="error" />
-              Login Error
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText
-                id="alert-dialog-description"
-                sx={{ color: "text.primary", mt: 1 }}
-              >
-                {errorMessage || "Something went wrong. Please try again."}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setErrorDialogOpen(false)}
-                variant="contained"
-                color="error"
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
+          <DialogError
+            errorMessage={errorMessage}
+            errorDialogOpen={errorDialogOpen}
+            setErrorDialogOpen={handleCloseDialog}
+          />
         </SignInContainer>
       </AppTheme>
     </>

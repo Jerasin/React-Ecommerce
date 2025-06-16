@@ -13,6 +13,8 @@ import Navbar from "../components/Navbar";
 import { uuidv7 } from "uuidv7";
 import { jwtDecode } from "jwt-decode";
 import { useFetch } from "../utils/client";
+import { useState } from "react";
+import DialogError from "../components/DialogError";
 
 interface WalletForm {
   name: string;
@@ -29,6 +31,8 @@ export default function AddWallet() {
     formState: { errors },
   } = useForm<WalletForm>();
   const navigate = useNavigate();
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = async (data: WalletForm) => {
     try {
@@ -52,10 +56,17 @@ export default function AddWallet() {
         body: data,
       });
 
-      navigate(-1)
-    } catch (error) {
-      console.log("error", error);
+      navigate(-1);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
+  };
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
   };
 
   return (
@@ -100,6 +111,12 @@ export default function AddWallet() {
             </Button>
           </Box>
         </Box>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Container>
     </AppTheme>
   );

@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useFetch } from "../utils/client";
+import DialogError from "../components/DialogError";
 
 interface OrderItem {
   amount: number;
@@ -27,22 +28,35 @@ export default function OrderDetail(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      const res = await useFetch<any>(`orders/${orderId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const res = await useFetch<any>(`orders/${orderId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (res) {
-        setItems(res.data);
+        if (res) {
+          setItems(res.data);
+        }
+      } catch (err: any) {
+        console.log("err", err);
+        setErrorMessage(err?.message || "Network error");
+        setErrorDialogOpen(true);
       }
     };
 
@@ -89,11 +103,20 @@ export default function OrderDetail(props: { disableCustomTheme?: boolean }) {
           Total Price: ${getTotal().toFixed(2)}
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }} marginBottom={4}>
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
+          marginBottom={4}
+        >
           <Button variant="contained" onClick={() => navigate(-1)}>
             Back
           </Button>
         </Box>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Container>
     </AppTheme>
   );

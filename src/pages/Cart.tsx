@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useFetch } from "../utils/client";
 import Navbar from "../components/Navbar";
+import DialogError from "../components/DialogError";
 
 interface CartItem {
   id: number;
@@ -37,24 +38,32 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const [walletError, setWalletError] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const fetchUserWallets = async () => {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    if (token == null) return;
+      if (token == null) return;
 
-    const decoded = jwtDecode<{ id: number }>(token);
+      const decoded = jwtDecode<{ id: number }>(token);
 
-    const response = await useFetch<any>(`users/${decoded.id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const response = await useFetch<any>(`users/${decoded.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (response?.data?.wallets) {
-      setWallets(response.data.wallets);
+      if (response?.data?.wallets) {
+        setWallets(response.data.wallets);
+      }
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
   };
 
@@ -74,7 +83,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
         };
       });
 
-      useFetch(`orders`, {
+      await useFetch(`orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,9 +97,16 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
 
       localStorage.removeItem("cart");
       navigate("/");
-    } catch (error) {
-      console.log("error", error);
+    } catch (err: any) {
+      console.log("err", err);
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
     }
+  };
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+    navigate("/");
   };
 
   useEffect(() => {
@@ -237,6 +253,12 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
             </Grid>
           </Grid>
         )}
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Container>
     </AppTheme>
   );

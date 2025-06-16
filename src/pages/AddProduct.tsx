@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFetch } from "../utils/client";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
+import DialogError from "../components/DialogError";
 
 interface FormValues {
   name: string;
@@ -33,12 +34,14 @@ interface FormValues {
 export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [productCates, setProductCates] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const isFetchingRef = useRef(false);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleMenuScroll = () => {
     if (!menuRef.current || isFetchingRef.current) return;
@@ -48,7 +51,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
     const totalPages = Math.ceil(total / pageSize);
 
     if (nearBottom && productCates.length < total && page < totalPages) {
-      isFetchingRef.current = true; 
+      isFetchingRef.current = true;
       setPage((prev) => prev + 1);
     }
   };
@@ -83,8 +86,10 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
 
           setTotal(productCate.total);
         }
-      } catch (error) {
-        console.log("Error", error);
+      } catch (err: any) {
+        console.log("err", err);
+        setErrorMessage(err?.message || "Network error");
+        setErrorDialogOpen(true);
       } finally {
         setIsLoading(true);
         isFetchingRef.current = false;
@@ -125,30 +130,40 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   });
 
   const onSubmit = async (data: FormValues) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    const payload = {
-      ...data,
-      saleOpenDate: data.saleOpenDate
-        ? data.saleOpenDate.toISOString()
-        : undefined,
-      saleCloseDate: data.saleCloseDate
-        ? data.saleCloseDate.toISOString()
-        : undefined,
-    };
+      const payload = {
+        ...data,
+        saleOpenDate: data.saleOpenDate
+          ? data.saleOpenDate.toISOString()
+          : undefined,
+        saleCloseDate: data.saleCloseDate
+          ? data.saleCloseDate.toISOString()
+          : undefined,
+      };
 
-    console.log("submit data:", payload);
+      console.log("submit data:", payload);
 
-    await useFetch(`products`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: payload,
-    });
+      await useFetch(`products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: payload,
+      });
 
+      navigate("/");
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Network error");
+      setErrorDialogOpen(true);
+    }
+  };
+
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
     navigate("/");
   };
 
@@ -233,7 +248,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                       select: {
                         MenuProps: {
                           PaperProps: {
-                            sx: { maxHeight: 200, overflowY: "auto" },
+                            sx: { maxHeight:200, overflowY: "auto" },
                             ref: (node: HTMLDivElement) => {
                               if (node && !menuRef.current) {
                                 menuRef.current = node;
@@ -296,6 +311,12 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
             </Button>
           </Box>
         </Box>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </Container>
     </AppTheme>
   );
