@@ -106,7 +106,7 @@ export default function CartPage(props: { disableCustomTheme?: boolean }) {
 
   const handleCloseDialog = (value: boolean) => {
     setErrorDialogOpen(value);
-    navigate("/");
+    // navigate("/");
   };
 
   useEffect(() => {

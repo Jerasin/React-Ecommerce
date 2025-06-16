@@ -23,9 +23,9 @@ export const useFetch = async <T>(
 
   console.log("result",result)
 
-  if (!response.ok) {
-    throw new Error(result.response_message || "Something went wrong");
-  }
+  // if (result.response_key == "UNKNOWN_ERROR") {
+  //   localStorage.clear()
+  // }
 
   return result as T;
 };

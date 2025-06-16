@@ -71,9 +71,14 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
         method: "GET",
       });
 
+      if(response.response_key == "UNKNOWN_ERROR"){
+        localStorage.clear()
+        navigate("/")
+      }
+
       return response;
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Error:", JSON.stringify(err));
     }
   };
 
