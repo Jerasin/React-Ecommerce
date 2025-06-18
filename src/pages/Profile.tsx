@@ -1,7 +1,6 @@
 import {
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   CssBaseline,
@@ -13,70 +12,16 @@ import { deepPurple } from "@mui/material/colors";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { useFetch } from "../utils/client";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { useNavigate } from "react-router-dom";
-import DialogError from "../components/DialogError";
-
-export interface PermissionInfo {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-}
-
-export interface UserRole {
-  name: string;
-  description: string;
-  permissionInfos: PermissionInfo[];
-}
-
-export interface UserProfile {
-  id: number;
-  username: string;
-  fullname: string;
-  avatar: string;
-  userId: number;
-  userRole: UserRole;
-  email: string;
-  createdAt: string;
-}
+import type { UserProfile } from "../interface";
+import { getUserInfo } from "../api";
+import { ErrorHandler } from "../utils";
 
 const Profile = (props: { disableCustomTheme?: boolean }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [cartCount, setCartCount] = useState(0);
-  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
-  const handleCloseDialog = (value: boolean) => {
-    setErrorDialogOpen(value);
-    navigate("/");
-  };
-
-  const fetchUser = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const user = await useFetch<any>(`users/info`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("user", user);
-      if (user) {
-        setUser(user.data);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
 
   useEffect(() => {
     const cart = localStorage.getItem("cart");
@@ -84,8 +29,14 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
       const cartArr = JSON.parse(cart);
       setCartCount(cartArr.length);
     }
+
     const fetchData = async () => {
-      await fetchUser();
+      const user = await getUserInfo({
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+      });
+      setUser(user.data);
     };
 
     fetchData();
@@ -186,12 +137,6 @@ const Profile = (props: { disableCustomTheme?: boolean }) => {
         ) : (
           <></>
         )}
-
-        <DialogError
-          errorMessage={errorMessage}
-          errorDialogOpen={errorDialogOpen}
-          setErrorDialogOpen={handleCloseDialog}
-        />
       </Box>
     </AppTheme>
   );

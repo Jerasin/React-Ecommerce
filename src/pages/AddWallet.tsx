@@ -11,15 +11,15 @@ import { useNavigate } from "react-router-dom";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { uuidv7 } from "uuidv7";
-import { jwtDecode } from "jwt-decode";
-import { useFetch } from "../utils/client";
 import { useState } from "react";
 import DialogError from "../components/DialogError";
+import { createWallet } from "../api";
+import { ErrorHandler, handleDialogError } from "../utils";
 
 interface WalletForm {
   name: string;
   token: string;
-  userId: number;
+  userId?: number;
   uuid: string;
   value: number;
 }
@@ -35,38 +35,22 @@ export default function AddWallet() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = async (data: WalletForm) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    data.uuid = uuidv7();
+    data.token = uuidv7();
 
-      const decoded = jwtDecode<{ id: number }>(token);
+    await createWallet(data, {
+      500: () => ErrorHandler(navigate),
+      401: () => ErrorHandler(navigate),
+      403: () => ErrorHandler(navigate),
+      400: (value?: string) =>
+        handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+    });
 
-      data.uuid = uuidv7();
-      data.token = uuidv7();
-      data.userId = decoded.id;
-
-      console.log("data", data);
-
-      await useFetch("wallets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: data,
-      });
-
-      navigate(-1);
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
+    navigate(-1);
   };
 
   const handleCloseDialog = (value: boolean) => {
     setErrorDialogOpen(value);
-    navigate("/");
   };
 
   return (

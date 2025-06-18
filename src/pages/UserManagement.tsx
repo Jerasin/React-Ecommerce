@@ -23,6 +23,9 @@ import { useEffect, useState } from "react";
 import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
 import DialogError from "../components/DialogError";
+import { getRoles, getUsers } from "../api";
+import type { RoleInfo } from "../interface";
+import { ErrorHandler, handleDialogError } from "../utils";
 
 export default function UserManagement(props: {
   disableCustomTheme?: boolean;
@@ -31,9 +34,7 @@ export default function UserManagement(props: {
   const [page, setPage] = useState<number>(1);
   const [totalPage, setTotalPage] = useState<number>(0);
   const navigate = useNavigate();
-  const [roles, setRoles] = useState<{ id: number; name: string }[] | null>(
-    null
-  );
+  const [roles, setRoles] = useState<RoleInfo[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -42,56 +43,31 @@ export default function UserManagement(props: {
     navigate("/");
   };
 
-  const fetchRoles = async (token: string) => {
-    try {
-      const res = await useFetch<any>(`role_infos`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res) {
-        setRoles(res.data);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
-
-  const fetchUsers = async (token: string) => {
-    try {
-      const res = await useFetch<any>(`users`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res) {
-        setUserList(res.data);
-        setTotalPage(res.totalPage);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      await fetchUsers(token);
-      await fetchRoles(token);
+      const roleInfoList = await getRoles({
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      setRoles(roleInfoList.data);
+
+      const users = await getUsers({
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      setUserList(users.data);
+      setTotalPage(users.totalPage);
     };
 
     fetchData();
   }, []);
+
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />

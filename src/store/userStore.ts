@@ -7,14 +7,14 @@ interface UserRolePermissionInfoStore {
 
 interface UserRoleInfoStore {
   name: string;
-  description: number;
+  description: string;
   permissionInfos: UserRolePermissionInfoStore[];
 }
 
 export interface UserInfoStore {
   username: string;
   id: number;
-  userId: number;
+  roleId: number;
   userRole: UserRoleInfoStore;
 }
 

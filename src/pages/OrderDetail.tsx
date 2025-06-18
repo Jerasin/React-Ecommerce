@@ -13,21 +13,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
-import { useFetch } from "../utils/client";
 import DialogError from "../components/DialogError";
-
-interface OrderItem {
-  amount: number;
-  orderID: number;
-  price: number;
-  productId: number;
-  productName: string;
-}
+import { getOrderDetail } from "../api";
+import type { OrderDetailItem } from "../interface";
+import { ErrorHandler, handleDialogError } from "../utils";
 
 export default function OrderDetail(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const [items, setItems] = useState<OrderItem[]>([]);
+  const [items, setItems] = useState<OrderDetailItem[]>([]);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -38,25 +32,15 @@ export default function OrderDetail(props: { disableCustomTheme?: boolean }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const res = await useFetch<any>(`orders/${orderId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      if (orderId != null) {
+        const orderDetail = await getOrderDetail(parseInt(orderId), {
+          500: () => ErrorHandler(navigate),
+          401: () => ErrorHandler(navigate),
+          403: () => ErrorHandler(navigate),
+          400: (value?: string) =>
+            handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
         });
-
-        if (res) {
-          setItems(res.data);
-        }
-      } catch (err: any) {
-        console.log("err", err);
-        setErrorMessage(err?.message || "Network error");
-        setErrorDialogOpen(true);
+        setItems(orderDetail.data);
       }
     };
 

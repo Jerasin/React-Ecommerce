@@ -15,10 +15,12 @@ import { Dayjs } from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useEffect, useRef, useState } from "react";
-import { useFetch } from "../utils/client";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import DialogError from "../components/DialogError";
+import { createProduct, getProductCategories } from "../api";
+import { ErrorHandler, handleDialogError } from "../utils";
+import type { CreateProduct } from "../interface";
 
 interface FormValues {
   name: string;
@@ -37,12 +39,11 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   const [pageSize] = useState(10);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [productCates, setProductCates] = useState<any[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [total, setTotal] = useState<number>(1);
   const isFetchingRef = useRef(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
+  const totalPage = Math.ceil(total / pageSize);
   const handleMenuScroll = () => {
     if (!menuRef.current || isFetchingRef.current) return;
 
@@ -58,42 +59,25 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-        if (page > Math.ceil(total / pageSize) && isLoading) return;
+      if (page > totalPage) return;
 
-        const productCate = await useFetch<any>(
-          `products/categories?page=${page}&pageSize=${pageSize}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+      const res = await getProductCategories(page, pageSize, {
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      setProductCates((prev: any) => {
+        const existingIds = new Set(prev.map((item: any) => item.id));
+        const newItems = res.data.filter(
+          (item: any) => !existingIds.has(item.id)
         );
-
-        if (productCate != null) {
-          setProductCates((prev: any) => {
-            const existingIds = new Set(prev.map((item: any) => item.id));
-            const newItems = productCate.data.filter(
-              (item: any) => !existingIds.has(item.id)
-            );
-            const updated = [...prev, ...newItems];
-            return updated;
-          });
-
-          setTotal(productCate.total);
-        }
-      } catch (err: any) {
-        console.log("err", err);
-        setErrorMessage(err?.message || "Network error");
-        setErrorDialogOpen(true);
-      } finally {
-        setIsLoading(true);
-        isFetchingRef.current = false;
-      }
+        const updated = [...prev, ...newItems];
+        return updated;
+      });
+      setTotal(res.total);
+      isFetchingRef.current = false;
     };
 
     fetchData();
@@ -130,41 +114,31 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
   });
 
   const onSubmit = async (data: FormValues) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    const payload: CreateProduct = {
+      ...data,
+      saleOpenDate: data.saleOpenDate
+        ? data.saleOpenDate.toISOString()
+        : undefined,
+      saleCloseDate: data.saleCloseDate
+        ? data.saleCloseDate.toISOString()
+        : undefined,
+    };
 
-      const payload = {
-        ...data,
-        saleOpenDate: data.saleOpenDate
-          ? data.saleOpenDate.toISOString()
-          : undefined,
-        saleCloseDate: data.saleCloseDate
-          ? data.saleCloseDate.toISOString()
-          : undefined,
-      };
+    console.log("submit data:", payload);
 
-      console.log("submit data:", payload);
+    await createProduct(payload, {
+      500: () => ErrorHandler(navigate),
+      401: () => ErrorHandler(navigate),
+      403: () => ErrorHandler(navigate),
+      400: (value?: string) =>
+        handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+    });
 
-      await useFetch(`products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: payload,
-      });
-
-      navigate("/");
-    } catch (err: any) {
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
+    navigate("/");
   };
 
   const handleCloseDialog = (value: boolean) => {
     setErrorDialogOpen(value);
-    navigate("/");
   };
 
   return (
@@ -248,7 +222,7 @@ export default function AddProduct(props: { disableCustomTheme?: boolean }) {
                       select: {
                         MenuProps: {
                           PaperProps: {
-                            sx: { maxHeight:200, overflowY: "auto" },
+                            sx: { maxHeight: 200, overflowY: "auto" },
                             ref: (node: HTMLDivElement) => {
                               if (node && !menuRef.current) {
                                 menuRef.current = node;

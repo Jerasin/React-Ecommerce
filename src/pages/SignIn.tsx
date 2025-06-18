@@ -4,7 +4,6 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import CssBaseline from "@mui/material/CssBaseline";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Divider from "@mui/material/Divider";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import Link from "@mui/material/Link";
@@ -18,19 +17,9 @@ import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { SitemarkIcon } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
-import { useFetch } from "../utils/client";
 import DialogError from "../components/DialogError";
-
-interface SignInDataResponse {
-  refresh_token: string;
-  token: string;
-}
-
-interface SignInResponse {
-  data: SignInDataResponse;
-  response_key: string;
-  response_message: string;
-}
+import { signIn } from "../api";
+import { ErrorHandler } from "../utils";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -89,10 +78,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     navigate("/");
   };
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
   const handleClose = () => {
     setOpen(false);
   };
@@ -105,26 +90,27 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    try {
-      event.preventDefault();
-      const response = await useFetch<SignInResponse>("auth/login", {
-        method: "POST",
-        body: formData,
-      });
-
-      console.log("response", response);
-
-      if (response) {
-        console.log("Register success:", response);
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("refresh_token", response.data.refresh_token);
-        navigate("/home");
-      }
-    } catch (err: any) {
-      console.error("Error:", err);
-      setErrorMessage(err?.message || "Network error");
+  const handleDialogError = (value?: string) => {
+    console.log("value", value);
+    if (value != null) {
+      setErrorMessage(value);
       setErrorDialogOpen(true);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const response = await signIn(formData, {
+      500: () => ErrorHandler(navigate),
+      401: () => ErrorHandler(navigate),
+      403: () => ErrorHandler(navigate),
+      400: (value?: string) => handleDialogError(value),
+    });
+
+    if (response) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("refresh_token", response.data.refresh_token);
+      navigate("/home");
     }
   };
 

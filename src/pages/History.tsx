@@ -12,22 +12,16 @@ import {
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
 import DialogError from "../components/DialogError";
+import { getListHistory } from "../api";
+import { ErrorHandler, handleDialogError } from "../utils";
 
 interface HistoryItem {
   id: number;
   totalAmount: number;
   totalPrice: number;
   updatedAt: string;
-}
-
-interface HistoryData {
-  data: HistoryItem[];
-  page: number;
-  pageSize: number;
-  totalPage: number;
 }
 
 const History = (props: { disableCustomTheme?: boolean }) => {
@@ -43,38 +37,24 @@ const History = (props: { disableCustomTheme?: boolean }) => {
     setErrorDialogOpen(value);
   };
 
-  const fetchHistories = async (page: number) => {
-    try {
-      const token = localStorage.getItem("token");
+  useEffect(() => {
+    const fetchData = async () => {
+      const histories = await getListHistory(page, {
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      setHistories(histories.data);
+      setTotalPage(histories.totalPage);
+
       const cart = localStorage.getItem("cart");
 
       if (cart != null) {
         const cartItem = JSON.parse(cart);
         setCartCount(cartItem.length);
       }
-      if (token == null) return;
-      const histories = await useFetch<HistoryData>(`orders?${page}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (histories) {
-        setHistories(histories.data);
-        setTotalPage(histories.totalPage);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchHistories(page);
     };
     fetchData();
   }, [page]);

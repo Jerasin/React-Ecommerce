@@ -17,6 +17,9 @@ import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { SitemarkIcon } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
+import { signUp } from "../api";
+import { ErrorHandler, handleDialogError } from "../utils";
+import DialogError from "../components/DialogError";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -72,6 +75,8 @@ export default function BackofficeSignUp(props: {
     isActive: true,
   });
   const navigate = useNavigate();
+  const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -81,30 +86,21 @@ export default function BackofficeSignUp(props: {
     }));
   };
 
+  const handleCloseDialog = (value: boolean) => {
+    setErrorDialogOpen(value);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const apiUrl = import.meta.env.VITE_API_URL;
 
-    try {
-      const response = await fetch(`${apiUrl}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Something went wrong");
-      }
-
-      console.log("Register success:", result);
-      navigate("/sign-in");
-    } catch (err) {
-      console.error("Error:", err);
-    }
+    await signUp(formData, {
+      500: () => ErrorHandler(navigate),
+      401: () => ErrorHandler(navigate),
+      403: () => ErrorHandler(navigate),
+      400: (value?: string) =>
+        handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+    });
+    navigate("/sign-in");
   };
 
   return (
@@ -216,6 +212,12 @@ export default function BackofficeSignUp(props: {
             </Typography>
           </Box>
         </Card>
+
+        <DialogError
+          errorMessage={errorMessage}
+          errorDialogOpen={errorDialogOpen}
+          setErrorDialogOpen={handleCloseDialog}
+        />
       </SignUpContainer>
     </AppTheme>
   );

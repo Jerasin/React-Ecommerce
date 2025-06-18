@@ -14,38 +14,18 @@ import {
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
 import React, { useEffect } from "react";
-import { useFetch } from "../utils/client";
-import { useUserStore } from "../store/userStore";
+import { useUserStore, type UserInfoStore } from "../store/userStore";
 import { useNavigate } from "react-router-dom";
 import DialogError from "../components/DialogError";
+import { getProducts, getUserInfo } from "../api";
+import type { Product } from "../interface";
+import { ErrorHandler, handleDialogError } from "../utils";
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  amount: number;
-  imgUrl?: string;
-  saleOpenDate?: string;
-  saleCloseDate?: string;
-}
-
-interface ReponseProduct {
-  data: Product[];
-  response_key: string;
-  response_message: string;
-  totalPage: number;
-  page: number;
-  pageSize: number;
-}
-
-export default function Product(props: { disableCustomTheme?: boolean }) {
+export default function ProductPage(props: { disableCustomTheme?: boolean }) {
   const [cartCount, setCartCount] = React.useState(0);
   const [page, setPage] = React.useState(1);
   const [totalPage, setTotalPage] = React.useState(1);
-  const [productData, setProductData] = React.useState<ReponseProduct | null>(
-    null
-  );
+  const [productData, setProductData] = React.useState<Product[]>([]);
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
@@ -78,64 +58,34 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
     navigate("/");
   };
 
-  const getProducts = async (page: number, token: string) => {
-    try {
-      const response = await useFetch<ReponseProduct>(`products?page=${page}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        method: "GET",
-      });
-
-      return response;
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
-
-  const getUserInfo = async (token: string) => {
-    try {
-      const response = await useFetch<any>(`users/info`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        method: "GET",
-      });
-
-      return response;
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token");
       const cart = localStorage.getItem("cartCount");
-      if (!token) return;
-
-      const userInfo = await getUserInfo(token);
-      if (userInfo?.data) {
-        console.log("Set userInfo");
-        setUser(userInfo.data);
+      if (cart != null) {
+        setCartCount(parseInt(cart));
       }
 
-      const data = await getProducts(page, token);
-      if (data) {
-        setProductData(data);
-        setTotalPage(data.totalPage);
+      const userInfo = await getUserInfo({
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      const products = await getProducts(page, {
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
 
-        if (cart != null) {
-          setCartCount(parseInt(cart));
-        }
-      }
+      setProductData(products.data);
+      setTotalPage(products.totalPage);
+      const userInfoStore: UserInfoStore = userInfo.data;
+      setUser(userInfoStore);
     };
+
     const cart = localStorage.getItem("cart");
 
     if (cart != null) {
@@ -144,8 +94,6 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
     }
     fetchData();
   }, [page]);
-
-  console.log("user", user);
 
   return (
     <AppTheme {...props}>
@@ -180,7 +128,7 @@ export default function Product(props: { disableCustomTheme?: boolean }) {
         </Box>
 
         <Grid container spacing={4}>
-          {productData?.data?.map((product) => (
+          {productData?.map((product) => (
             <Grid key={product.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 sx={{

@@ -20,16 +20,15 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { useUserStore, type UserInfoStore } from "../store/userStore";
+import { useUserStore } from "../store/userStore";
 import { useEffect } from "react";
-import { useFetch } from "../utils/client";
-import ColorModeSelect from "../shared-theme/ColorModeSelect";
+import { getUserInfo } from "../api";
+import { ErrorHandler } from "../utils";
 
 interface MenuAppBarOption {
   cartCount: number;
 }
 export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
-  // const [cartCount, setCartCount] = React.useState(3);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const navigate = useNavigate();
@@ -55,49 +54,26 @@ export default function MenuAppBar({ cartCount }: MenuAppBarOption) {
     // },
   ];
   const user = useUserStore((state) => state.user);
-  const clearUser = useUserStore((state) => state.clearUser);
   const setUser = useUserStore((state) => state.setUser);
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const getUserInfo = async (token: string) => {
-    try {
-      const response = await useFetch<any>(`users/info`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        method: "GET",
-      });
-
-      if(response.response_key == "UNKNOWN_ERROR"){
-        localStorage.clear()
-        navigate("/")
-      }
-
-      return response;
-    } catch (err) {
-      console.error("Error:", JSON.stringify(err));
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (user == null) {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-        const userInfo = await getUserInfo(token);
-        if (userInfo?.data) {
-          console.log("Set userInfo");
-          setUser(userInfo.data);
-        }
+        const userInfo = await getUserInfo({
+          500: () => ErrorHandler(navigate),
+          401: () => ErrorHandler(navigate),
+          403: () => ErrorHandler(navigate),
+          400: () => ErrorHandler(navigate),
+        });
+        setUser(userInfo.data);
       }
     };
 
     fetchData();
   }, []);
-  console.log("user", user);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

@@ -14,21 +14,14 @@ import { Add, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import Navbar from "../components/Navbar";
-import { useFetch } from "../utils/client";
 import { useNavigate } from "react-router-dom";
 import DialogError from "../components/DialogError";
-
-interface Wallet {
-  id: number;
-  name: string;
-  token: string;
-  user_id: number;
-  uuid: string;
-  value: number;
-}
+import { getListWallet } from "../api";
+import type { WalletInfo } from "../interface";
+import { ErrorHandler, handleDialogError } from "../utils";
 
 export default function WalletManager(props: { disableCustomTheme?: boolean }) {
-  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [wallets, setWallets] = useState<WalletInfo[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(10);
@@ -41,45 +34,29 @@ export default function WalletManager(props: { disableCustomTheme?: boolean }) {
     navigate("/");
   };
 
-  const fetchWallets = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token == null) return;
-      const res = await useFetch<any>(`wallets`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res) {
-        setWallets(res.data);
-        setTotalPage(res.totalPage);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      setErrorMessage(err?.message || "Network error");
-      setErrorDialogOpen(true);
-    }
-  };
-
   useEffect(() => {
     const cart = localStorage.getItem("cart");
-
-    const fetchData = async () => {
-      fetchWallets();
-    };
-
     if (cart != null) {
       const cartArr = JSON.parse(cart);
       setCartCount(cartArr.length);
     }
 
+    const fetchData = async () => {
+      const wallets = await getListWallet({
+        500: () => ErrorHandler(navigate),
+        401: () => ErrorHandler(navigate),
+        403: () => ErrorHandler(navigate),
+        400: (value?: string) =>
+          handleDialogError(value, { setErrorMessage, setErrorDialogOpen }),
+      });
+      setWallets(wallets.data);
+      setTotalPage(wallets.totalPage);
+    };
+
     fetchData();
   }, []);
 
-  const handleEdit = (wallet: Wallet) => {
+  const handleEdit = (wallet: WalletInfo) => {
     console.log("Edit", wallet);
   };
 
